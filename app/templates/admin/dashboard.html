@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Application review | Admissions Portal{% endblock %}
+{% block content %}
+<section class="welcome-row">
+  <div>
+    <p class="eyebrow">ADMINISTRATION</p>
+    <h1>Application review</h1>
+    <p class="muted">Search, review, and update student applications.</p>
+  </div>
+  <span class="admin-badge">ADMINISTRATOR</span>
+</section>
+
+<section class="card table-card">
+  <form class="filter-bar" method="get">
+    <div class="filter-search">
+      <label class="visually-hidden" for="q">Search applicants</label>
+      <input id="q" name="q" type="search" placeholder="Search name, email, or program" value="{{ search }}">
+    </div>
+    <div>
+      <label class="visually-hidden" for="status">Filter by status</label>
+      <select id="status" name="status">
+        <option value="">All statuses</option>
+        {% for key, label in statuses.items() %}
+          <option value="{{ key }}" {{ 'selected' if status_filter == key }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="button button-primary" type="submit">Filter</button>
+    {% if search or status_filter %}<a class="button button-secondary" href="{{ url_for('admin.dashboard') }}">Clear</a>{% endif %}
+  </form>
+
+  {% if pagination.items %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Applicant</th><th>Program</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {% for application in pagination.items %}
+            <tr>
+              <td><strong>{{ application.student.full_name }}</strong><span class="table-sub">{{ application.student.email }}</span></td>
+              <td>{{ application.program or 'Not selected' }}</td>
+              <td>{{ application.submitted_at.strftime('%b %d, %Y') if application.submitted_at else 'Not submitted' }}</td>
+              <td><span class="status status-{{ application.status }}">{{ statuses[application.status] }}</span></td>
+              <td><a class="table-link" href="{{ url_for('admin.application_detail', application_id=application.id) }}">Review →</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if pagination.pages > 1 %}
+      <nav class="pagination" aria-label="Application pages">
+        {% if pagination.has_prev %}
+          <a href="{{ url_for('admin.dashboard', page=pagination.prev_num, q=search, status=status_filter) }}">← Previous</a>
+        {% endif %}
+        <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
+        {% if pagination.has_next %}
+          <a href="{{ url_for('admin.dashboard', page=pagination.next_num, q=search, status=status_filter) }}">Next →</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="empty-table">
+      <div class="empty-icon">—</div>
+      <h2>No applications found</h2>
+      <p>Submitted student applications will appear here.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

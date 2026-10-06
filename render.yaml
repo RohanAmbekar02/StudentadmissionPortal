@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: online-student-admission-portal
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: flask --app run.py init-db && gunicorn run:app --bind 0.0.0.0:$PORT
+    healthCheckPath: /auth/login
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

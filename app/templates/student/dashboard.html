@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}My dashboard | Student Admissions Portal{% endblock %}
+{% block content %}
+<section class="welcome-row">
+  <div>
+    <p class="eyebrow">STUDENT DASHBOARD</p>
+    <h1>Welcome, {{ current_user.full_name.split()[0] }}.</h1>
+    <p class="muted">Your admissions journey, all in one place.</p>
+  </div>
+  {% if application and application.status in ['draft', 'needs_changes'] %}
+    <a class="button button-primary" href="{{ url_for('student.application') }}">
+      {{ 'Update application' if application.status == 'needs_changes' else 'Continue application' }}
+    </a>
+  {% elif not application %}
+    <a class="button button-primary" href="{{ url_for('student.application') }}">Start application</a>
+  {% endif %}
+</section>
+
+{% if application %}
+  <section class="dashboard-grid">
+    <article class="card application-card">
+      <div class="card-heading">
+        <div>
+          <p class="eyebrow">ADMISSIONS APPLICATION</p>
+          <h2>{{ application.program or 'Program not selected' }}</h2>
+        </div>
+        <span class="status status-{{ application.status }}">{{ statuses[application.status] }}</span>
+      </div>
+      <div class="progress-track" aria-label="Application status: {{ statuses[application.status] }}">
+        <span class="progress-fill progress-{{ application.status }}"></span>
+      </div>
+      <div class="application-meta">
+        <div><span>Application reference</span><strong>APP-{{ '%06d'|format(application.id) }}</strong></div>
+        <div><span>Last updated</span><strong>{{ application.updated_at.strftime('%b %d, %Y') }}</strong></div>
+        <div><span>Documents received</span><strong>{{ application.documents|length }} of 3</strong></div>
+      </div>
+      {% if application.review_note %}
+        <div class="review-note"><strong>Admissions team note</strong><p>{{ application.review_note }}</p></div>
+      {% endif %}
+    </article>
+    <aside class="card checklist-card">
+      <p class="eyebrow">APPLICATION CHECKLIST</p>
+      <h2>What happens next?</h2>
+      <ul class="check-list">
+        <li class="{{ 'complete' if application.status != 'draft' }}">Complete your details</li>
+        <li class="{{ 'complete' if application.documents|length == 3 }}">Upload required documents</li>
+        <li class="{{ 'complete' if application.status not in ['draft', 'needs_changes'] }}">Submit your application</li>
+        <li class="{{ 'complete' if application.status in ['accepted', 'rejected'] }}">Receive an admission decision</li>
+      </ul>
+      <p class="small-note">You can edit your details and replace documents while your application is a draft or changes have been requested.</p>
+    </aside>
+  </section>
+{% else %}
+  <section class="card empty-state">
+    <div class="empty-icon">01</div>
+    <p class="eyebrow">READY WHEN YOU ARE</p>
+    <h2>Begin your application</h2>
+    <p>Tell us a little about yourself, choose a program, and upload the documents needed for review.</p>
+    <a class="button button-primary" href="{{ url_for('student.application') }}">Start application</a>
+  </section>
+{% endif %}
+{% endblock %}

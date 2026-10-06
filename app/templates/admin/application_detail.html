@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Review application | Admissions Portal{% endblock %}
+{% block content %}
+<section class="form-page-header">
+  <a class="back-link" href="{{ url_for('admin.dashboard') }}">← Back to applications</a>
+  <p class="eyebrow">APPLICATION · APP-{{ '%06d'|format(application.id) }}</p>
+  <div class="detail-title-row">
+    <div><h1>{{ application.student.full_name }}</h1><p class="muted">{{ application.student.email }}</p></div>
+    <span class="status status-{{ application.status }}">{{ statuses[application.status] }}</span>
+  </div>
+</section>
+
+<section class="form-layout review-layout">
+  <div class="card">
+    <div class="section-heading"><span class="step-number">01</span><div><h2>Applicant information</h2><p>Student-submitted application details.</p></div></div>
+    <dl class="detail-list">
+      <div><dt>Program</dt><dd>{{ application.program or 'Not provided' }}</dd></div>
+      <div><dt>Date of birth</dt><dd>{{ application.date_of_birth.strftime('%B %d, %Y') if application.date_of_birth else 'Not provided' }}</dd></div>
+      <div><dt>Phone</dt><dd>{{ application.phone or 'Not provided' }}</dd></div>
+      <div><dt>Address</dt><dd>{{ application.address or 'Not provided' }}</dd></div>
+      <div><dt>Submitted</dt><dd>{{ application.submitted_at.strftime('%B %d, %Y at %H:%M UTC') if application.submitted_at else 'Not submitted' }}</dd></div>
+      <div><dt>Last updated</dt><dd>{{ application.updated_at.strftime('%B %d, %Y at %H:%M UTC') }}</dd></div>
+    </dl>
+    <div class="section-heading document-heading"><span class="step-number">02</span><div><h2>Supporting documents</h2><p>{{ application.documents|length }} document(s) attached.</p></div></div>
+    {% if application.documents %}
+      <div class="document-list">
+        {% for document in application.documents %}
+          <div class="document-item">
+            <div class="document-symbol">↓</div>
+            <div class="document-info"><strong>{{ document.document_type|replace('_', ' ')|title }}</strong><span>{{ document.original_name }}</span></div>
+            <a class="button button-small button-secondary" href="{{ url_for('admin.download_document', document_id=document.id) }}">Download</a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No documents have been uploaded.</p>
+    {% endif %}
+  </div>
+
+  <aside class="card review-card">
+    <p class="eyebrow">ADMISSIONS DECISION</p>
+    <h2>Update review</h2>
+    <p class="muted">The student will see the status and note on their dashboard.</p>
+    <form method="post" action="{{ url_for('admin.update_review', application_id=application.id) }}" class="form-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="status">Application status</label>
+      <select id="status" name="status" required>
+        {% for status in review_statuses %}
+          <option value="{{ status }}" {{ 'selected' if application.status == status }}>{{ statuses[status] }}</option>
+        {% endfor %}
+      </select>
+      <label for="review_note">Note for student</label>
+      <textarea id="review_note" name="review_note" rows="6" maxlength="4000" placeholder="Share feedback or next steps...">{{ application.review_note or '' }}</textarea>
+      <button class="button button-primary button-wide" type="submit">Save review update</button>
+    </form>
+  </aside>
+</section>
+{% endblock %}

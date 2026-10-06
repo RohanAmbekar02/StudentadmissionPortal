@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Your application | Student Admissions Portal{% endblock %}
+{% block content %}
+<section class="form-page-header">
+  <a class="back-link" href="{{ url_for('student.dashboard') }}">← Back to dashboard</a>
+  <p class="eyebrow">APPLICATION · APP-{{ '%06d'|format(application.id) }}</p>
+  <h1>Your student application</h1>
+  <p class="muted">Complete your details and attach the supporting documents below. Save your work as a draft at any time.</p>
+</section>
+
+<section class="form-layout">
+  <div class="card">
+    <div class="section-heading"><span class="step-number">01</span><div><h2>Personal and program details</h2><p>Fields marked with * are required.</p></div></div>
+    <form method="post" class="form-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="full_name">Full name *</label>
+      <input id="full_name" name="full_name" type="text" required maxlength="120" value="{{ request.form.get('full_name', current_user.full_name) }}">
+      <div class="form-row">
+        <div class="form-field">
+          <label for="date_of_birth">Date of birth *</label>
+          <input id="date_of_birth" name="date_of_birth" type="date" value="{{ request.form.get('date_of_birth', application.date_of_birth.isoformat() if application.date_of_birth else '') }}">
+        </div>
+        <div class="form-field">
+          <label for="phone">Phone number *</label>
+          <input id="phone" name="phone" type="tel" maxlength="30" value="{{ request.form.get('phone', application.phone or '') }}">
+        </div>
+      </div>
+      <label for="program">Program applying for *</label>
+      <input id="program" name="program" type="text" maxlength="120" placeholder="e.g. Bachelor of Computer Science" value="{{ request.form.get('program', application.program or '') }}">
+      <label for="address">Home address *</label>
+      <textarea id="address" name="address" rows="4" maxlength="4000">{{ request.form.get('address', application.address or '') }}</textarea>
+      <div class="button-row">
+        <button class="button button-secondary" type="submit" name="action" value="save" formnovalidate>Save draft</button>
+        <button class="button button-primary" type="submit" name="action" value="submit">Submit application</button>
+      </div>
+    </form>
+  </div>
+
+  <aside class="card documents-card">
+    <div class="section-heading"><span class="step-number">02</span><div><h2>Supporting documents</h2><p>PDF, PNG, JPG, or JPEG · {{ (config['MAX_CONTENT_LENGTH'] // (1024 * 1024)) }} MB request limit</p></div></div>
+    <p class="muted">All three document types are required before you can submit.</p>
+    <div class="document-list">
+      {% for key, label in document_types.items() %}
+        {% set document = application.documents|selectattr('document_type', 'equalto', key)|first %}
+        <div class="document-item">
+          <div class="document-symbol">{{ '✓' if document else '↑' }}</div>
+          <div class="document-info">
+            <strong>{{ label }}</strong>
+            {% if document %}
+              <span>{{ document.original_name }}</span>
+              <a href="{{ url_for('student.download_document', document_id=document.id) }}">Download current file</a>
+            {% else %}
+              <span>Not uploaded yet</span>
+            {% endif %}
+          </div>
+          <form class="upload-form" method="post" action="{{ url_for('student.upload_document') }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="document_type" value="{{ key }}">
+            <label class="button button-small button-secondary" for="file-{{ key }}">{{ 'Replace' if document else 'Choose file' }}</label>
+            <input class="visually-hidden" id="file-{{ key }}" name="document" type="file" accept=".pdf,.png,.jpg,.jpeg" required onchange="this.form.submit()">
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="privacy-note"><strong>Document privacy</strong><p>Files are stored outside the public web directory and can only be downloaded by you or an administrator.</p></div>
+  </aside>
+</section>
+{% endblock %}

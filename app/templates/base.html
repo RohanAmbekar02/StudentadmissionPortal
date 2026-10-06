@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#12304a">
+  <title>{% block title %}Student Admissions Portal{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('main.index') }}">
+      <span class="brand-mark">A</span>
+      <span>Admissions<span class="brand-subtitle">STUDENT PORTAL</span></span>
+    </a>
+    <nav aria-label="Main navigation">
+      {% if current_user.is_authenticated %}
+        {% if current_user.is_admin %}
+          <a href="{{ url_for('admin.dashboard') }}">Applications</a>
+        {% else %}
+          <a href="{{ url_for('student.dashboard') }}">My dashboard</a>
+        {% endif %}
+        <span class="nav-user">{{ current_user.full_name }}</span>
+        <form class="inline-form" action="{{ url_for('auth.logout') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="nav-button" type="submit">Sign out</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}">Sign in</a>
+        <a class="nav-cta" href="{{ url_for('auth.register') }}">Create account</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="page">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <section class="flash-stack" aria-live="polite">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </section>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <span>Student Admissions Portal</span>
+    <span>Questions? Contact your admissions office.</span>
+  </footer>
+</body>
+</html>
